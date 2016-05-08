@@ -42,24 +42,6 @@ export class Messaging {
             })
         })
 
-        // Simulate a web app handling user registrations
-        setInterval(function() {
-            var user = { username: chance.first() + '_' + chance.last() }
-            var events = { 0: 'created', 1: 'updated', 2: 'deleted' }
-            var event = events[Math.floor(Math.random() * 3)]
-            var routingKey = format('registration_webapp.user.%s.%s', event, user.username)
-
-            broker.publish('user_event', user, routingKey, function(err, publication) {
-                if (err) return console.log(err.message)
-                publication
-                    .on('success', function() {
-                        // confirmed
-                    }).on('error', function(err) {
-                        console.error(err.message)
-                    })
-            })
-        }, 1000)
-
         process.on('SIGINT', function() {
             broker.shutdown(function() {
                 process.exit()

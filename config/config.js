@@ -29,20 +29,8 @@ export const config = {
         // Define queues within the registration vhost
         // A good naming convension for queues is consumer:entity:action
         "queues": {
-
           // Create a queue for saving users
-          "registration_service:user:save": {
-            "options": {
-              "arguments": {
-                // Route nacked messages to a service specific dead letter queue
-                "x-dead-letter-exchange": "dead_letters",
-                "x-dead-letter-routing-key": "registration_service.dead_letter"
-              }
-            }
-          },
-
-          // Create a queue for deleting users
-          "registration_service:user:delete": {
+          "registration_service:user:mail": {
             "options": {
               "arguments": {
                 // Route nacked messages to a service specific dead letter queue
@@ -71,18 +59,8 @@ export const config = {
         // A good naming convention for routing keys is producer.entity.event
         "bindings": {
 
-          // Route create/update user messages to the save queue
-          "service[registration_webapp.user.created.#,registration_webapp.user.updated.#] -> registration_service:user:save": {},
-
-          // Route delete user messages to the delete queue
-          "service[registration_webapp.user.deleted.#] -> registration_service:user:delete": {},
-
           // Route delayed messages to the 1 minute delay queue
           "delay[delay.1m] -> delay:1m": {},
-
-          // Route retried messages back to their original queue using the CC routing keys set by Rascal
-          "retry[registration_service:user:save.#] -> registration_service:user:save": {},
-          "retry[registration_service:user:delete.#] -> registration_service:user:delete": {},
 
           // Route dead letters the service specific dead letter queue
           "dead_letters[registration_service.dead_letter] -> dead_letters:registration_service": {}
@@ -91,29 +69,15 @@ export const config = {
 
         // Setup subscriptions
         "subscriptions": {
-
-          "save_user": {
-            "queue": "registration_service:user:save",
-            "handler": "saveUser.js"
-          },
-
-          "delete_user": {
-            "queue": "registration_service:user:delete",
-            "handler": "deleteUser.js"
+          "save_user_succeeded": {
+            "queue": "registration_service:user:mail",
+            "handler": "sendMail.js"
           }
         },
 
         // Setup publications
         "publications": {
-
-          // Always publish a notification of success (it's useful for testing if nothing else)
-          "save_user_succeeded": {
-            "exchange": "service"
-          },
-          "delete_user_succeeded": {
-            "exchange": "service"
-          },
-
+          
           // Forward messages to the 1 minute delay queue when retrying
           "retry_in_1m": {
             "exchange": "delay",
