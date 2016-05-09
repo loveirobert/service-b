@@ -23,14 +23,15 @@ export const config = {
           "service",      // Shared exchange for all services within this vhost
           "delay",        // To delay failed messages before a retry
           "retry",        // To retry failed messages a up to maximum number of times
-          "dead_letters"  // When retring fails messages end up here
+          "dead_letters",  // When retring fails messages end up here
+          "mail"
         ],
 
         // Define queues within the registration vhost
         // A good naming convension for queues is consumer:entity:action
         "queues": {
           // Create a queue for saving users
-          "registration_service:user:mail": {
+          "registration_mail:user:saved": {
             "options": {
               "arguments": {
                 // Route nacked messages to a service specific dead letter queue
@@ -70,14 +71,14 @@ export const config = {
         // Setup subscriptions
         "subscriptions": {
           "save_user_succeeded": {
-            "queue": "registration_service:user:mail",
+            "queue": "registration_mail:user:saved",
             "handler": "sendMail.js"
           }
         },
 
         // Setup publications
         "publications": {
-          
+
           // Forward messages to the 1 minute delay queue when retrying
           "retry_in_1m": {
             "exchange": "delay",
